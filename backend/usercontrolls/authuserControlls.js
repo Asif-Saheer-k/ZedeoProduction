@@ -9,31 +9,34 @@ const verification = require("../middlewares/twiliovVerification");
 const userLogin = asyncHandler(async (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  console.log(req.body);
-  try {
-    const Findemail = await db
-      .get()
-      .collection(collection.USER_COLLECTION)
-      .findOne({ email: email });
+  if (email && password) {
+    try {
+      const Findemail = await db
+        .get()
+        .collection(collection.USER_COLLECTION)
+        .findOne({ email: email });
       console.log(Findemail);
-    if (Findemail) {
-      bcrypt.compare(password,Findemail.password).then(async (status) => {
-        if (status) {
-          const name = Findemail.name;
-          const email = Findemail.email;
-          const phone = Findemail.phone;
-          const CUST_ID = Findemail.CUST_ID;
-          const token = generateToken(Findemail._id);
-          res.status(200).json({ name, email, phone, CUST_ID, token });
-        } else {
-          res.status(401).json("Incorrect Password");
-        }
-      });
-    } else {
+      if (Findemail) {
+        bcrypt.compare(password, Findemail.password).then(async (status) => {
+          if (status) {
+            const name = Findemail.name;
+            const email = Findemail.email;
+            const phone = Findemail.phone;
+            const CUST_ID = Findemail._id;
+            const token = generateToken(Findemail._id);
+            res.status(200).json({ name, email, phone, CUST_ID, token });
+          } else {
+            res.status(401).json("Incorrect Password");
+          }
+        });
+      } else {
+        res.status(401).json("Invalid Email Address");
+      }
+    } catch (error) {
       res.status(401).json("Invalid Email Address");
     }
-  } catch (error) {
-    res.status(401).json("Invalid Email Address");
+  } else {
+    res.status(401).json("Please Provide Credentials");
   }
 });
 
@@ -52,7 +55,7 @@ const userRegistration = asyncHandler(async (req, res) => {
   } else {
     const code = await verification.sendOtp(phone);
     if (code) {
-      res.status(200).json({name,email,phone,password});
+      res.status(200).json({ name, email, phone, password });
     } else {
       res.status(500).json("Somthing went wrong");
     }

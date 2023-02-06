@@ -206,12 +206,12 @@ const viewAllProducts = asyncHandler(async (req, res) => {
   const products = await db
     .get()
     .collection(collection.PRODUCT_COLLECTION)
-    .find()
+    .find({ hidden: false,stockManagement:true })
     .toArray();
   if (products) {
     res.status(200).json(products);
   } else {
-    res.status(200).json("Somthing Went Wrong");
+    res.status(400).json("Somthing Went Wrong");
   }
 });
 const ViewCategoryProducts = asyncHandler(async (req, res) => {
@@ -293,6 +293,44 @@ const ViewStockProducts = asyncHandler(async (req, res) => {
     res.status(404).json("No records");
   }
 });
+const UpdateProduct = asyncHandler(async (req, res) => {
+  const id = req.body.id;
+  const variants = req.body.variants;
+  const updated = await db
+    .get()
+    .collection(collection.PRODUCT_COLLECTION)
+    .updateOne({ _id: ObjectId(id) }, { $set: { variants: variants } });
+  if (updated) {
+    res.status(200).json("Updated");
+  } else {
+    res.status(404).json("something went wrong");
+  }
+});
+
+const DeleteProduct = asyncHandler(async (req, res) => {
+  const id = req.body.id;
+  const hidden = await db
+    .get()
+    .collection(collection.PRODUCT_COLLECTION)
+    .updateOne({ _id: ObjectId(id) }, { $set: { hidden: true } });
+  if (hidden) {
+    res.status(200).json("Success");
+  } else {
+    res.status(404).json("Something Went Wrong");
+  }
+});
+const viewStockManagementProducts = asyncHandler(async (req, res) => {
+  const product = await db
+    .get()
+    .collection(collection.PRODUCT_COLLECTION)
+    .find({ stockManagement: false })
+    .toArray();
+  if (product) {
+    res.status(200).json(product);
+  } else {
+    res.status(400).json("No records");
+  }
+});
 module.exports = {
   AdminLogin,
   ViewALLuser,
@@ -309,4 +347,7 @@ module.exports = {
   ViewCategoryProducts,
   ImageUploading,
   ViewStockProducts,
+  UpdateProduct,
+  DeleteProduct,
+  viewStockManagementProducts
 };
